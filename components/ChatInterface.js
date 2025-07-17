@@ -48,6 +48,15 @@ const ChatInterface = ({ userContext }) => {
     }
   }, [isLoading, fadeAnim]);
 
+  // Auto-scroll when messages change
+  React.useEffect(() => {
+    if (messages.length > 0) {
+      setTimeout(() => {
+        scrollViewRef.current?.scrollToEnd({ animated: true });
+      }, 100);
+    }
+  }, [messages]);
+
   const sendMessage = async () => {
     if (!inputText.trim()) return;
 
@@ -68,7 +77,7 @@ const ChatInterface = ({ userContext }) => {
     // Auto-scroll to bottom
     setTimeout(() => {
       scrollViewRef.current?.scrollToEnd({ animated: true });
-    }, 100);
+    }, 200);
 
     try {
       const context = userContext ? JSON.stringify(userContext) : '';
@@ -86,7 +95,7 @@ const ChatInterface = ({ userContext }) => {
       // Auto-scroll to bottom
       setTimeout(() => {
         scrollViewRef.current?.scrollToEnd({ animated: true });
-      }, 100);
+      }, 200);
       
     } catch (error) {
       const errorMessage = {
@@ -140,9 +149,16 @@ const ChatInterface = ({ userContext }) => {
         <ScrollView 
           ref={scrollViewRef}
           style={styles.messagesContainer}
-          contentContainerStyle={styles.messagesContent}
-          showsVerticalScrollIndicator={false}
+          contentContainerStyle={[styles.messagesContent, { flexGrow: 1 }]}
+          showsVerticalScrollIndicator={true}
           keyboardShouldPersistTaps="handled"
+          keyboardDismissMode="interactive"
+          bounces={true}
+          alwaysBounceVertical={false}
+          maintainVisibleContentPosition={{
+            minIndexForVisible: 0,
+            autoscrollToTopThreshold: 10,
+          }}
         >
           {messages.map((message) => renderMessage(message))}
           
@@ -201,10 +217,12 @@ const styles = StyleSheet.create({
   },
   messagesContainer: {
     flex: 1,
+    paddingTop: 10,
   },
   messagesContent: {
-    padding: 20,
-    paddingBottom: 10,
+    paddingHorizontal: 20,
+    paddingBottom: 20,
+    minHeight: '100%',
   },
   messageContainer: {
     marginBottom: 20,
@@ -297,7 +315,7 @@ const styles = StyleSheet.create({
     borderTopWidth: 1,
     borderTopColor: '#E5E7EB',
     paddingHorizontal: 20,
-    paddingVertical: 12,
+    paddingTop: 12,
     paddingBottom: Platform.OS === 'ios' ? 34 : 12, // Account for home indicator on iOS
   },
   inputWrapper: {

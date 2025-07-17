@@ -40,7 +40,9 @@ export default function ChatScreen() {
   return (
     <SafeAreaView style={styles.container}>
       <StatusBar barStyle="dark-content" backgroundColor="#F8FAFB" />
-      <ChatInterface userContext={userContext} />
+      <View style={styles.chatWrapper}>
+        <ChatInterface userContext={userContext} />
+      </View>
     </SafeAreaView>
   );
 }
@@ -49,5 +51,8 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#F8FAFB',
+  },
+  chatWrapper: {
+    flex: 1,
   },
 });
