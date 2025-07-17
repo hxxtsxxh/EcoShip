@@ -48,14 +48,14 @@ const ChatInterface = ({ userContext }) => {
     }
   }, [isLoading, fadeAnim]);
 
-  // Auto-scroll when messages change
+  // Auto-scroll when messages change (only auto-scroll if user is near bottom)
   React.useEffect(() => {
-    if (messages.length > 0) {
+    if (messages.length > 1) { // Don't auto-scroll for initial message
       setTimeout(() => {
         scrollViewRef.current?.scrollToEnd({ animated: true });
-      }, 100);
+      }, 300);
     }
-  }, [messages]);
+  }, [messages.length]); // Only trigger on message count change, not content
 
   const sendMessage = async () => {
     if (!inputText.trim()) return;
@@ -77,7 +77,7 @@ const ChatInterface = ({ userContext }) => {
     // Auto-scroll to bottom
     setTimeout(() => {
       scrollViewRef.current?.scrollToEnd({ animated: true });
-    }, 200);
+    }, 100);
 
     try {
       const context = userContext ? JSON.stringify(userContext) : '';
@@ -95,7 +95,7 @@ const ChatInterface = ({ userContext }) => {
       // Auto-scroll to bottom
       setTimeout(() => {
         scrollViewRef.current?.scrollToEnd({ animated: true });
-      }, 200);
+      }, 100);
       
     } catch (error) {
       const errorMessage = {
@@ -140,26 +140,19 @@ const ChatInterface = ({ userContext }) => {
   );
 
   return (
-    <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
-      <KeyboardAvoidingView 
-        style={styles.container} 
-        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-        keyboardVerticalOffset={Platform.OS === 'ios' ? 90 : 0}
+    <View style={styles.container}>
+      <ScrollView 
+        ref={scrollViewRef}
+        style={styles.messagesContainer}
+        contentContainerStyle={styles.messagesContent}
+        showsVerticalScrollIndicator={true}
+        keyboardShouldPersistTaps="handled"
+        keyboardDismissMode="interactive"
+        scrollEnabled={true}
+        nestedScrollEnabled={true}
+        removeClippedSubviews={false}
+        onTouchStart={() => {}}
       >
-        <ScrollView 
-          ref={scrollViewRef}
-          style={styles.messagesContainer}
-          contentContainerStyle={[styles.messagesContent, { flexGrow: 1 }]}
-          showsVerticalScrollIndicator={true}
-          keyboardShouldPersistTaps="handled"
-          keyboardDismissMode="interactive"
-          bounces={true}
-          alwaysBounceVertical={false}
-          maintainVisibleContentPosition={{
-            minIndexForVisible: 0,
-            autoscrollToTopThreshold: 10,
-          }}
-        >
           {messages.map((message) => renderMessage(message))}
           
           {isLoading && (
@@ -178,37 +171,41 @@ const ChatInterface = ({ userContext }) => {
           )}
         </ScrollView>
         
-        <View style={styles.inputContainer}>
-          <View style={styles.inputWrapper}>
-            <TextInput
-              style={styles.textInput}
-              value={inputText}
-              onChangeText={setInputText}
-              placeholder="Ask me about shipping or sustainability..."
-              placeholderTextColor="#999"
-              multiline
-              maxLength={500}
-              returnKeyType="send"
-              onSubmitEditing={sendMessage}
-              blurOnSubmit={false}
-              enablesReturnKeyAutomatically={true}
-            />
-            <TouchableOpacity
-              style={[styles.sendButton, { 
-                opacity: inputText.trim() ? 1 : 0.5,
-                backgroundColor: inputText.trim() ? '#FF6B00' : '#ccc'
-              }]}
-              onPress={sendMessage}
-              disabled={!inputText.trim() || isLoading}
-            >
-              <Send size={20} color="#fff" />
-            </TouchableOpacity>
+        <KeyboardAvoidingView 
+          behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+          keyboardVerticalOffset={Platform.OS === 'ios' ? 90 : 0}
+        >
+          <View style={styles.inputContainer}>
+            <View style={styles.inputWrapper}>
+              <TextInput
+                style={styles.textInput}
+                value={inputText}
+                onChangeText={setInputText}
+                placeholder="Ask me about shipping or sustainability..."
+                placeholderTextColor="#999"
+                multiline
+                maxLength={500}
+                returnKeyType="send"
+                onSubmitEditing={sendMessage}
+                blurOnSubmit={false}
+                enablesReturnKeyAutomatically={true}
+              />
+              <TouchableOpacity
+                style={[styles.sendButton, { 
+                  opacity: inputText.trim() ? 1 : 0.5,
+                  backgroundColor: inputText.trim() ? '#FF6B00' : '#ccc'
+                }]}
+                onPress={sendMessage}
+                disabled={!inputText.trim() || isLoading}
+              >
+                <Send size={20} color="#fff" />
+              </TouchableOpacity>
+            </View>
           </View>
-        </View>
-      </KeyboardAvoidingView>
-    </TouchableWithoutFeedback>
-  );
-};
+        </KeyboardAvoidingView>
+      </View>
+    );
+  };
 
 const styles = StyleSheet.create({
   container: {
@@ -217,12 +214,11 @@ const styles = StyleSheet.create({
   },
   messagesContainer: {
     flex: 1,
-    paddingTop: 10,
   },
   messagesContent: {
-    paddingHorizontal: 20,
-    paddingBottom: 20,
-    minHeight: '100%',
+    padding: 20,
+    paddingTop: 10,
+    flexGrow: 1,
   },
   messageContainer: {
     marginBottom: 20,
